@@ -1,0 +1,12 @@
+
+#) use Tornado options instead of global constants
+
+#) implement a RequestHandler that returns "hello world"
+
+#) write an HTML page template and let Tornado render it
+
+#) start the fortunes server and write a backend request to it
+
+#) run multiple backend requests in parallel and collect the results
+
+#) reuse running backend calls across web requests

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fortune Lists</title>
+</head>
+<body>
+    <h1>Fortune Lists</h1>
+    <ul>
+    {% for _key in sorted(fortune_lists) %}
+        <li><a href="{{ build_link(_key, 'html') }}">{{ _key[-1].rsplit('/', 1)[-1] }}</a> by {{ _key[0] }} (<a href="{{ build_link(_key, 'json') }}">JSON</a>)</li>
+    {% end %}
+    </ul>
+</body>
+</html>
