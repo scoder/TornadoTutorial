@@ -3,6 +3,7 @@ import re
 
 from functools import partial
 
+import tornado.gen
 from tornado.gen import coroutine
 from tornado.httpclient import AsyncHTTPClient
 
@@ -79,7 +80,11 @@ def download(urls=URLS):
     for key, response in files.items():
         result[key] = parse_response(response)
 
-    return result
+    # Python 3
+    #return result
+
+    # Python 2
+    raise tornado.gen.Return(result)
 
 
 @coroutine
