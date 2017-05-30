@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PYTHON=python3.6
+PYTHON=python3
 VENVDIR=venv
 
 virtualenv -p $PYTHON $VENVDIR  || exit 1
