@@ -36,7 +36,12 @@ class WebApplication(tornado.web.Application):
             if start_time is not None:
                 _logger.info("Downloaded data files in %.2f seconds", time.time() - start_time)
             self._downloading = None
-        return self._data
+
+        # Python 3
+        #return self._data
+
+        # Python 2
+        raise tornado.gen.Return(self._data)
 
 
 class FortuneListHandler(RequestHandler):
