@@ -105,4 +105,8 @@ def download_interleaved(urls=URLS):
         for key, url in map(raw_url, urls)
     ]
 
-    return result
+    # Python 3
+    #return result
+
+    # Python 2
+    raise tornado.gen.Return(result)
