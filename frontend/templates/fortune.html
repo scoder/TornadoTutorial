@@ -7,7 +7,10 @@
 <body>
     <h1>Fortune Cookies</h1>
 
-    {# ... #}
+    {% for _item in fortunes %}
+        <pre>{{ _item }}</pre>
+        <hr>
+    {% end %}
 
 </body>
 </html>

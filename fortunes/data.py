@@ -1,10 +1,12 @@
+"""
+Data provider for the backend server.
+
+Reads and caches fortune cookie files from GitHub repositories.
+"""
 
 import re
 
-from functools import partial
-
-import tornado.gen
-from tornado.gen import coroutine
+from tornado.gen import multi, WaitIterator
 from tornado.httpclient import AsyncHTTPClient
 
 
@@ -62,8 +64,7 @@ def parse_response(response):
     return re.split(r'\s*%\s+', data)
 
 
-@coroutine
-def download(urls=URLS):
+async def download(urls=URLS):
     """
     Download and parse the given URLs.
     """
@@ -71,42 +72,38 @@ def download(urls=URLS):
 
     # download all files in parallel and wait for all results
     http_client = AsyncHTTPClient()
-    files = yield {
+    files = await multi({
         key: http_client.fetch(url)
         for key, url in map(raw_url, urls)
-    }
+    })
 
     # process all downloaded files sequentially
     for key, response in files.items():
         result[key] = parse_response(response)
 
-    # Python 3
-    #return result
-
-    # Python 2
-    raise tornado.gen.Return(result)
+    return result
 
 
-@coroutine
-def download_interleaved(urls=URLS):
+async def download_interleaved(urls=URLS):
     """
     Download and parse the given URLs.
     Processes responses as they come in to minimise the overall latency.
     """
-    result = {}
-
-    def handle_response(key, response):
-        result[key] = parse_response(response)
+    keys = {
+        url: key
+        for key, url in map(raw_url, urls)
+    }
 
     # download all files in parallel and process them as they come in
     http_client = AsyncHTTPClient()
-    yield [
-        http_client.fetch(url, callback=partial(handle_response, key))
-        for key, url in map(raw_url, urls)
+    futures = [
+        http_client.fetch(url)
+        for url in keys
     ]
 
-    # Python 3
-    #return result
+    result = {
+        keys[response.request.url]: parse_response(response)
+        async for response in WaitIterator(*futures)
+    }
 
-    # Python 2
-    raise tornado.gen.Return(result)
+    return result

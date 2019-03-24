@@ -1,12 +1,17 @@
+"""
+Backend web-service implementation.
 
+See data.py for the data part.
+"""
+
+import asyncio
 import json
-import time
-import os.path
 import logging
+import os.path
+import time
 
-import tornado.gen
-import tornado.web
 import tornado.ioloop
+import tornado.web
 
 from tornado.options import options, define
 from tornado.web import RequestHandler
@@ -24,31 +29,27 @@ class WebApplication(tornado.web.Application):
     _data = None
     _downloading = None
 
-    @tornado.gen.coroutine
-    def read_data(self, interleaved=False):
+    async def read_data(self, interleaved=False):
         if not self._data:
-            # join parallel download requests into one
             start_time = None
+            # join parallel download requests into one
             if self._downloading is None:
                 start_time = time.time()
-                self._downloading = download_interleaved() if interleaved else download()
-            self._data = yield self._downloading
+                # Need a Task here since coroutines are not awaitable more than once.
+                self._downloading = asyncio.create_task(
+                    download_interleaved() if interleaved else download())
+            self._data = await self._downloading
             if start_time is not None:
                 _logger.info("Downloaded data files in %.2f seconds", time.time() - start_time)
             self._downloading = None
 
-        # Python 3
-        #return self._data
-
-        # Python 2
-        raise tornado.gen.Return(self._data)
+        return self._data
 
 
 class FortuneListHandler(RequestHandler):
-    @tornado.gen.coroutine
-    def get(self):
-        data = yield self.application.read_data(interleaved=True)
-        self.render("list.html", fortune_lists=data, build_link=self._build_link)
+    async def get(self):
+        data = await self.application.read_data(interleaved=True)
+        await self.render("list.html", fortune_lists=data, build_link=self._build_link)
 
     def _build_link(self, key, file_format='html'):
         return "/fortunes/{}/{}/{}{format}".format(
@@ -56,18 +57,21 @@ class FortuneListHandler(RequestHandler):
 
 
 class FortuneHandler(RequestHandler):
-    @tornado.gen.coroutine
-    def get(self, owner, repo, path, format):
-        data = yield self.application.read_data(interleaved=True)
+    async def get(self, owner, repo, path, format):
+        data = await self.application.read_data(interleaved=True)
         result = data.get((owner, repo, path))
         if not result:
             self.send_error(404)
             return
+
+        # Make the request take a bit longer.
+        await asyncio.sleep(1)
+
         if format == 'json':
             self.set_header('Content-Type', 'application/json')
-            self.finish(json.dumps(result))
+            await self.finish(json.dumps(result))
         else:
-            self.render("fortune.html", data=result)
+            await self.render("fortune.html", data=result)
 
 
 def main(port=None):

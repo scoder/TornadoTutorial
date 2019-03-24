@@ -3,11 +3,12 @@
 PYTHON=python3
 VENVDIR=venv
 
-virtualenv -p $PYTHON $VENVDIR  || exit 1
-. $VENVDIR/bin/activate
+$PYTHON -c "import sys; assert sys.version_info >= (3, 7)"
 
-pip install -U pip  || exit 2
-pip install -r requirements.txt  || exit 3
+$PYTHON -m venv $VENVDIR  || exit 1
+
+$VENVDIR/bin/pip install -U pip setuptools || exit 2
+$VENVDIR/bin/pip install -r requirements.txt  || exit 3
 
 echo
-echo "virtualenv created in '$VENVDIR'"
+echo "venv created in '$VENVDIR'"
