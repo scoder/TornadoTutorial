@@ -31,7 +31,8 @@ class FortuneRequestHandler(RequestHandler):
     # --- Entry point for HTTP GET requests: ---
 
     async def get(self):
-        fortunes = await self.fetch_and_wait(self.URLS)
+        fortunes = await self.fetch_sequential(self.URLS)
+        #fortunes = await self.fetch_and_wait(self.URLS)
         #fortunes = await self.fetch_as_they_come_asyncio(self.URLS)
         #fortunes = await self.fetch_as_they_come_tornado(self.URLS)
         #fortunes = await self.fetch_non_redundant(self.URLS)
@@ -60,6 +61,17 @@ class FortuneRequestHandler(RequestHandler):
         return json.loads(response.body.decode('utf8'))
 
     # --- Different ways to parallelise backend requests: ---
+
+    async def fetch_sequential(self, urls):
+        _logger.info("reading fortunes from backend")
+
+        fortunes = []
+        for url in urls:
+            response = await self.prepare_request(url)
+            data = self.parse_json_response(response)
+            fortunes.extend(data)
+
+        return fortunes
 
     async def fetch_and_wait(self, urls):
         futures = self.prepare_request_list(urls)
