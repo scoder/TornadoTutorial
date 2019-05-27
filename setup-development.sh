@@ -3,7 +3,7 @@
 PYTHON=python3
 VENVDIR=venv
 
-$PYTHON -c "import sys; assert sys.version_info >= (3, 7)"
+$PYTHON -c "import sys; assert sys.version_info >= (3, 6)"
 
 $PYTHON -m venv $VENVDIR  || exit 1
 
